@@ -8,8 +8,8 @@ Global:
   save_epoch_step: 10
   eval_batch_step: [0, 2000]
   cal_metric_during_train: true
-  pretrained_model:
-  checkpoints:
+  pretrained_model: ./ch_PP-OCRv4_rec_server_train/best_accuracy.pdparams
+  checkpoints: 
   save_inference_dir:
   use_visualdl: false
   infer_img: doc/imgs_words/ch/word_1.jpg
@@ -75,10 +75,10 @@ Train:
   dataset:
     name: MultiScaleDataSet
     ds_width: false
-    data_dir: ./train_data/
+    data_dir: ./train_data/rec/
     ext_op_transform_idx: 1
     label_file_list:
-    - ./train_data/train_list.txt
+    - ./train_data/rec/rec_gt_train.txt
     transforms:
     - DecodeImage:
         img_mode: BGR
@@ -101,7 +101,7 @@ Train:
   sampler:
     name: MultiScaleSampler
     scales: [[320, 32], [320, 48], [320, 64]]
-    first_bs: &bs 192
+    first_bs: &bs 64 #192
     fix_bs: false
     divided_factor: [8, 16] # w, h
     is_training: True
@@ -113,9 +113,9 @@ Train:
 Eval:
   dataset:
     name: SimpleDataSet
-    data_dir: ./train_data
+    data_dir: ./train_data/rec/
     label_file_list:
-    - ./train_data/val_list.txt
+    - ./train_data/rec/rec_gt_val.txt
     transforms:
     - DecodeImage:
         img_mode: BGR
@@ -134,5 +134,5 @@ Eval:
   loader:
     shuffle: false
     drop_last: false
-    batch_size_per_card: 128
+    batch_size_per_card: 64 #128
     num_workers: 4

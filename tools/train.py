@@ -17,6 +17,8 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+os.environ['FLAGS_eager_delete_tensor_gb'] = '0.0'
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 import sys
 
 __dir__ = os.path.dirname(os.path.abspath(__file__))
@@ -26,6 +28,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(__dir__, "..")))
 import yaml
 import paddle
 import paddle.distributed as dist
+
+
+
 
 from ppocr.data import build_dataloader, set_signal_handlers
 from ppocr.modeling.architectures import build_model

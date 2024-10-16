@@ -231,7 +231,7 @@ class DetResizeForTest(object):
 
         if self.resize_type == 0:
             # img, shape = self.resize_image_type0(img)
-            img, [ratio_h, ratio_w] = self.resize_image_type0(img)
+            img, [ratio_h, ratio_w] = self.resize_image_type0(img)  # go this way!!
         elif self.resize_type == 2:
             img, [ratio_h, ratio_w] = self.resize_image_type2(img)
         else:

@@ -17,6 +17,8 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+
 import sys
 
 __dir__ = os.path.dirname(os.path.abspath(__file__))
@@ -163,6 +165,7 @@ def main():
     logger.info("metric eval ***************")
     for k, v in metric.items():
         logger.info("{}:{}".format(k, v))
+        # logger.fatal("{}:{}".format(k, v))   # TODO: 临时修改
 
 
 if __name__ == "__main__":

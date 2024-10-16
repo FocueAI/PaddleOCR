@@ -576,6 +576,14 @@ def eval(
     amp_custom_white_list=[],
     amp_dtype="float16",
 ):
+    paddle.device.cuda.empty_cache()
+    paddle.set_device('cpu')  # TODO: wei
+    # 
+    # print(f'将模型转换到cpu上。。。。')
+    # for param in model.parameters():
+    #     param.set_value(param.value().cpu())
+    # print(f'----将模型转换到cpu上。。。完成')
+    # model.cpu()
     model.eval()
     with paddle.no_grad():
         total_frame = 0.0
@@ -616,6 +624,8 @@ def eval(
                         lr_img = preds["lr_img"]
                     else:
                         preds = model(images)
+                    
+                        
                 preds = to_float32(preds)
             else:
                 if model_type == "table" or extra_input:
@@ -631,8 +641,10 @@ def eval(
                     sr_img = preds["sr_img"]
                     lr_img = preds["lr_img"]
                 else:
-                    preds = model(images)
-
+                    # print('-------inference begin---------')
+                    preds = model(images.cpu())
+                    # print('-------inference end---------')
+                paddle.device.cuda.empty_cache()  # TODO: 经过测试， 有用，可以撑过一段 时间
             batch_numpy = []
             for item in batch:
                 if isinstance(item, paddle.Tensor):

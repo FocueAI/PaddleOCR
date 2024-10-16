@@ -10,7 +10,7 @@ __pycache__/
 inference/
 inference_results/
 output/
-train_data/
+# train_data/
 log/
 *.DS_Store
 *.vs
@@ -32,3 +32,14 @@ paddleocr.egg-info/
 /deploy/android_demo/app/cache/
 test_tipc/web/models/
 test_tipc/web/node_modules/
+
+
+output/
+train_data/
+!train_data/deal_data_det.ipynb
+!train_data/deal_data_rec.ipynb
+
+checkpoints/
+ch_PP-OCRv4_det_server_train/
+ch_PP-OCRv4_rec_server_train/
+debug/
