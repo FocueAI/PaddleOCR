@@ -32,14 +32,18 @@ paddle2onnx --model_dir ./inference/iter_epoch_60-9-9 \
 ####################################### ----------------------------- 识别 --------------------------------- #################################
 # 训练
 python tools/train.py -c configs/rec/PP-OCRv4/ch_PP-OCRv4_rec.yml
+python tools/train.py -c configs/rec/PP-OCRv4/ch_PP-OCRv4_rec_hgnet.yml
+nohup python -m paddle.distributed.launch --log_dir=./debug/ --gpus '0,1,2,3' tools/train.py -c configs/rec/PP-OCRv4/ch_PP-OCRv4_rec_hgnet.yml >train-10-16-2.log &
+
+# 测试
+## accuracy:0.7013574660633484  字符级别的准确率：0.9197 
+ python tools/infer_rec_cal_accuracy.py -c configs/rec/PP-OCRv4/ch_PP-OCRv4_rec_hgnet.yml -o Global.checkpoints=./ch_PP-OCRv4_rec_server_train/best_accuracy.pdparams  Global.use_gpu=True  Global.infer_img=train_data/rec/test 
+## accuracy:0.8027149321266969  字符级别的准确率：0.9505
+ python tools/infer_rec_cal_accuracy.py -c configs/rec/PP-OCRv4/ch_PP-OCRv4_rec_hgnet.yml -o Global.checkpoints=./output/rec_ppocr_v4_hgnet2/best_accuracy.pdparams  Global.use_gpu=True  Global.infer_img=train_data/rec/test
 
 
-
-
-
-
-
-
+### a. 模型转换
+python tools/export_model.py -c configs/rec/PP-OCRv4/ch_PP-OCRv4_rec_hgnet.yml -o Global.checkpoints=./output/rec_ppocr_v4_hgnet2/best_accuracy.pdparams Global.save_inference_dir=./inference/ch_PP-OCRv4_rec_hgnet_2024_10_17/
 
 
 
