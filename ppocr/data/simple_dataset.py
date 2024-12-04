@@ -88,7 +88,7 @@ class SimpleDataSet(Dataset):
             if hasattr(op, "ext_data_num"):
                 ext_data_num = getattr(op, "ext_data_num")
                 break
-        load_data_ops = self.ops[: self.ext_op_transform_idx]
+        load_data_ops = self.ops[: self.ext_op_transform_idx]  # 额外获取的图像"素材"，不必要进行数据增强!!!!!
         ext_data = []
 
         while len(ext_data) < ext_data_num:

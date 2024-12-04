@@ -81,7 +81,7 @@ def crop_area(im, text_polys, min_crop_side_ratio, max_tries):
     h_array = np.zeros(h, dtype=np.int32)
     w_array = np.zeros(w, dtype=np.int32)
     for points in text_polys:
-        points = np.round(points, decimals=0).astype(np.int32)
+        points = np.round(points, decimals=0).astype(np.int32) # 将boxes中的坐标转换成整型
         minx = np.min(points[:, 0])
         maxx = np.max(points[:, 0])
         w_array[minx:maxx] = 1
@@ -89,8 +89,8 @@ def crop_area(im, text_polys, min_crop_side_ratio, max_tries):
         maxy = np.max(points[:, 1])
         h_array[miny:maxy] = 1
     # ensure the cropped area not across a text
-    h_axis = np.where(h_array == 0)[0]
-    w_axis = np.where(w_array == 0)[0]
+    h_axis = np.where(h_array == 0)[0] # 在h上面 找到 没有文字投影的 区域 
+    w_axis = np.where(w_array == 0)[0] # 在w上面 找到 没有文字投影的 区域
 
     if len(h_axis) == 0 or len(w_axis) == 0:
         return 0, 0, w, h
@@ -151,14 +151,14 @@ class EastRandomCropData(object):
             img, all_care_polys, self.min_crop_side_ratio, self.max_tries
         )
         # crop 图片 保持比例填充
-        scale_w = self.size[0] / crop_w
-        scale_h = self.size[1] / crop_h
+        scale_w = self.size[0] / crop_w   # 设定的宽 / 裁剪图像块的宽
+        scale_h = self.size[1] / crop_h   # 设定的高 / 裁剪图像块的高
         scale = min(scale_w, scale_h)
-        h = int(crop_h * scale)
+        h = int(crop_h * scale)   # 变化小的边===> 设定的边， 另一边则是按照 裁剪的图像块的比例 裁剪!!!!
         w = int(crop_w * scale)
-        if self.keep_ratio:
-            padimg = np.zeros((self.size[1], self.size[0], img.shape[2]), img.dtype)
-            padimg[:h, :w] = cv2.resize(
+        if self.keep_ratio: # go this way!!!
+            padimg = np.zeros((self.size[1], self.size[0], img.shape[2]), img.dtype) # 黑色背景
+            padimg[:h, :w] = cv2.resize(  # 将裁剪出的图像块，resize后，贴在 黑色背景上！！！！
                 img[crop_y : crop_y + crop_h, crop_x : crop_x + crop_w], (w, h)
             )
             img = padimg
@@ -177,7 +177,7 @@ class EastRandomCropData(object):
                 text_polys_crop.append(poly)
                 ignore_tags_crop.append(tag)
                 texts_crop.append(text)
-        data["image"] = img
+        data["image"] = img  
         data["polys"] = np.array(text_polys_crop)
         data["ignore_tags"] = ignore_tags_crop
         data["texts"] = texts_crop

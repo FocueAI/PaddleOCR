@@ -56,9 +56,9 @@ class IaaAugment:
     def __init__(self, augmenter_args=None, **kwargs):
         if augmenter_args is None:
             augmenter_args = [
-                {"type": "Fliplr", "args": {"p": 0.5}},
-                {"type": "Affine", "args": {"rotate": [-10, 10]}},
-                {"type": "Resize", "args": {"size": [0.5, 3]}},
+                {"type": "Fliplr", "args": {"p": 0.5}},          # 水平翻转的概率是 50%
+                {"type": "Affine", "args": {"rotate": [-10, 10]}}, # 旋转 -10 ~ 10 度之间
+                {"type": "Resize", "args": {"size": [0.5, 3]}},  # 图像的宽高同时 变为原先的 0.5~3倍之间
             ]
         self.augmenter = AugmenterBuilder().build(augmenter_args)
 

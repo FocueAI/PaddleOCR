@@ -62,17 +62,17 @@ class DBLoss(nn.Layer):
             label_shrink_map,
             label_shrink_mask,
         ) = labels[1:]
-        shrink_maps = predict_maps[:, 0, :, :]
-        threshold_maps = predict_maps[:, 1, :, :]
-        binary_maps = predict_maps[:, 2, :, :]
+        shrink_maps = predict_maps[:, 0, :, :]    # 特征图 ----> cbn -----> sigmoid ----> 
+        threshold_maps = predict_maps[:, 1, :, :] # 特征图 ----> 阈值网络 --->
+        binary_maps = predict_maps[:, 2, :, :]   # 相当于一个动态阈值
 
         loss_shrink_maps = self.bce_loss(
-            shrink_maps, label_shrink_map, label_shrink_mask
+            shrink_maps, label_shrink_map, label_shrink_mask   # 向外扩张后的文字区域，损失计算
         )
-        loss_threshold_maps = self.l1_loss(
+        loss_threshold_maps = self.l1_loss(   # 文字边界周围的损失
             threshold_maps, label_threshold_map, label_threshold_mask
         )
-        loss_binary_maps = self.dice_loss(
+        loss_binary_maps = self.dice_loss(     # 向外扩张后的文字区域，动态阈值损失计算
             binary_maps, label_shrink_map, label_shrink_mask
         )
         loss_shrink_maps = self.alpha * loss_shrink_maps

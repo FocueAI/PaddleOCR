@@ -34,7 +34,8 @@ def get_bias_attr(k):
 class Head(nn.Layer):
     def __init__(self, in_channels, kernel_list=[3, 2, 2], **kwargs):
         super(Head, self).__init__()
-
+        # TODO: 增加 多分类 功能!!!
+        self.mulcls = kwargs.get("n_cls", None)
         self.conv1 = nn.Conv2D(
             in_channels=in_channels,
             out_channels=in_channels // 4,
@@ -66,14 +67,16 @@ class Head(nn.Layer):
         )
         self.conv3 = nn.Conv2DTranspose(
             in_channels=in_channels // 4,
-            out_channels=1,
+            out_channels= 1,
+            out_channels= self.mulcls if self.mulcls is not None else 1,
             kernel_size=kernel_list[2],
             stride=2,
             weight_attr=ParamAttr(initializer=paddle.nn.initializer.KaimingUniform()),
             bias_attr=get_bias_attr(in_channels // 4),
         )
+        
 
-    def forward(self, x, return_f=False):
+    def forward(self, x, return_f=False,):
         x = self.conv1(x)
         x = self.conv_bn1(x)
         x = self.conv2(x)
@@ -81,6 +84,8 @@ class Head(nn.Layer):
         if return_f is True:
             f = x
         x = self.conv3(x)
+        if self.mulcls is not None:
+            return x
         x = F.sigmoid(x)
         if return_f is True:
             return x, f
@@ -97,9 +102,19 @@ class DBHead(nn.Layer):
 
     def __init__(self, in_channels, k=50, **kwargs):
         super(DBHead, self).__init__()
+        
+        ################################### 文本属性多分类 ################################
+        self.mulcls_num = kwargs.get("n_cls", None) 
+        
+    
+        #################################################################################
+        
+        
         self.k = k
         self.binarize = Head(in_channels, **kwargs)
         self.thresh = Head(in_channels, **kwargs)
+        self.mulcls = Head(in_channels, **kwargs)
+        
 
     def step_function(self, x, y):
         return paddle.reciprocal(1 + paddle.exp(-self.k * (x - y)))
@@ -132,22 +147,29 @@ class PFHeadLocal(DBHead):
     def __init__(self, in_channels, k=50, mode="small", **kwargs):
         super(PFHeadLocal, self).__init__(in_channels, k, **kwargs)
         self.mode = mode
-
+        ################################### 文本属性多分类 ################################
+        self.mulcls_num = kwargs.get("n_cls", None) 
+        
+        
+        
+        
+        #################################################################################
+        
         self.up_conv = nn.Upsample(scale_factor=2, mode="nearest", align_mode=1)
         if self.mode == "large":
             self.cbn_layer = LocalModule(in_channels // 4, in_channels // 4)
         elif self.mode == "small":
             self.cbn_layer = LocalModule(in_channels // 4, in_channels // 8)
 
-    def forward(self, x, targets=None):
-        shrink_maps, f = self.binarize(x, return_f=True)
+    def forward(self, x, targets=None):  # x.shape=[12, 256, 80, 320]
+        shrink_maps, f = self.binarize(x, return_f=True) # shrink_maps.shape=[12, 1, 320, 1280] ---> 这已经是原图大小了,  f.shape=[12, 64, 160, 640]
         base_maps = shrink_maps
-        cbn_maps = self.cbn_layer(self.up_conv(f), shrink_maps, None)
-        cbn_maps = F.sigmoid(cbn_maps)
+        cbn_maps = self.cbn_layer(self.up_conv(f), shrink_maps, None) # [12, 1, 320, 1280]
+        cbn_maps = F.sigmoid(cbn_maps) # [12, 1, 320, 1280]
         if not self.training:
             return {"maps": 0.5 * (base_maps + cbn_maps), "cbn_maps": cbn_maps}
 
-        threshold_maps = self.thresh(x)
-        binary_maps = self.step_function(shrink_maps, threshold_maps)
-        y = paddle.concat([cbn_maps, threshold_maps, binary_maps], axis=1)
+        threshold_maps = self.thresh(x)  # [12, 1, 320, 1280]
+        binary_maps = self.step_function(shrink_maps, threshold_maps) # shrink_maps.shape=threshold_maps.shape=[12, 1, 320, 1280],,,,,,,binary_maps.shape=[12, 1, 320, 1280]
+        y = paddle.concat([cbn_maps, threshold_maps, binary_maps], axis=1)  # y.shape = [12, 3, 320, 1280]
         return {"maps": y, "distance_maps": cbn_maps, "cbn_maps": binary_maps}

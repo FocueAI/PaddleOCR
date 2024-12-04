@@ -55,7 +55,7 @@ class CopyPaste(object):
         ext_image = cv2.cvtColor(ext_image, cv2.COLOR_BGR2RGB)
         src_img = Image.fromarray(src_img).convert("RGBA")
         for idx, poly, tag in zip(select_idxs, select_polys, select_ignores):
-            box_img = get_rotate_crop_image(ext_image, poly)
+            box_img = get_rotate_crop_image(ext_image, poly) # 得到正向(0°)的矩形图像切片
 
             src_img, box = self.paste_img(src_img, box_img, src_polys)
             if box is not None:

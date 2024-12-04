@@ -47,7 +47,8 @@ class ClsLabelEncode(object):
 class DetLabelEncode(object):
     def __init__(self, **kwargs):
         # pass
-        self.class2id = kwargs["class2id"] # eg:  ["series", "barcode", "title", "call_no",...]
+        # self.class2id = kwargs["class2id"] # eg:  ["series", "barcode", "title", "call_no",...]
+        self.class2id = kwargs.get("class2id", None)
 
     def __call__(self, data):
         label = data["label"]
@@ -57,10 +58,12 @@ class DetLabelEncode(object):
         for bno in range(0, nBox):
             box = label[bno]["points"]
             txt = label[bno]["transcription"]
-            cls = label[bno]["class"]
+            if self.class2id is not None:
+                cls = label[bno]["class"]
             boxes.append(box)
             txts.append(txt)
-            classes.append(self.class2id.index(cls)) # 新增的 文本类别
+            if self.class2id is not None:
+                 classes.append(self.class2id.index(cls)) # 新增的 文本类别
             if txt in ["*", "###"]:
                 txt_tags.append(True)
             else:
@@ -69,13 +72,15 @@ class DetLabelEncode(object):
             return None
         boxes = self.expand_points_num(boxes)
         boxes = np.array(boxes, dtype=np.float32)
-        classes = np.array(classes, dtype=np.uint16)
+        if self.class2id is not None:
+            classes = np.array(classes, dtype=np.uint16)
         txt_tags = np.array(txt_tags, dtype=np.bool_)
 
         data["polys"] = boxes
         data["texts"] = txts
         data["ignore_tags"] = txt_tags
-        data["classes"] = classes
+        if self.class2id is not None:
+            data["classes"] = classes
         return data
 
     def order_points_clockwise(self, pts):

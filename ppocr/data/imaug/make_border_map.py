@@ -64,7 +64,7 @@ class MakeBorderMap(object):
         return data
 
     def draw_border_map(self, polygon, canvas, mask):
-        polygon = np.array(polygon)
+        polygon = np.array(polygon)   # 这里只是一个文本框！！！
         assert polygon.ndim == 2
         assert polygon.shape[1] == 2
 
@@ -80,8 +80,8 @@ class MakeBorderMap(object):
         padding = pyclipper.PyclipperOffset()
         padding.AddPath(subject, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
 
-        padded_polygon = np.array(padding.Execute(distance)[0])
-        cv2.fillPoly(mask, [padded_polygon.astype(np.int32)], 1.0)
+        padded_polygon = np.array(padding.Execute(distance)[0])  # 当distance>0, 多边形向外扩张。 当distance<0, 多边形向内收缩!!  ======> 这里显然是向外 扩张的！！！
+        cv2.fillPoly(mask, [padded_polygon.astype(np.int32)], 1.0) # mask部分在这里戏份已经 杀青!!!!
 
         xmin = padded_polygon[:, 0].min()
         xmax = padded_polygon[:, 0].max()
@@ -90,7 +90,7 @@ class MakeBorderMap(object):
         width = xmax - xmin + 1
         height = ymax - ymin + 1
 
-        polygon[:, 0] = polygon[:, 0] - xmin
+        polygon[:, 0] = polygon[:, 0] - xmin  # 相当于 在 padded_polygon 最小外接矩形（非旋转）中 算坐标， 替换在整个图像上算坐标
         polygon[:, 1] = polygon[:, 1] - ymin
 
         xs = np.broadcast_to(
@@ -99,7 +99,7 @@ class MakeBorderMap(object):
         ys = np.broadcast_to(
             np.linspace(0, height - 1, num=height).reshape(height, 1), (height, width)
         )
-
+        # polygon.shape = [n,2] 代表该多边形有 n个顶点 ，每个顶点有(x,y) 2个值来确定位置
         distance_map = np.zeros((polygon.shape[0], height, width), dtype=np.float32)
         for i in range(polygon.shape[0]):
             j = (i + 1) % polygon.shape[0]
@@ -122,7 +122,7 @@ class MakeBorderMap(object):
 
     def _distance(self, xs, ys, point_1, point_2):
         """
-        compute the distance from point to a line
+        compute the distance from point to a line, 这里 xs,ys为点, 其中的线段为的端点为 point1,  point2
         ys: coordinates in the first axis
         xs: coordinates in the second axis
         point_1, point_2: (x, y), the end of the line

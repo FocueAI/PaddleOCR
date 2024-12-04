@@ -335,7 +335,7 @@ def train(
                 scaled_avg_loss = scaler.scale(avg_loss)
                 scaled_avg_loss.backward()
                 scaler.minimize(optimizer, scaled_avg_loss)
-            else:
+            else: # go this way!!!
                 if model_type == "table" or extra_input:
                     preds = model(images, data=batch[1:])
                 elif model_type in ["kie", "sr"]:
@@ -344,8 +344,8 @@ def train(
                     preds = model(batch[:3])
                 elif algorithm in ["LaTeXOCR"]:
                     preds = model(batch)
-                else:
-                    preds = model(images)
+                else: # go this way!!!
+                    preds = model(images) # images.shape = [12, 3, 320, 1280], preds.shape
                 loss = loss_class(preds, batch)
                 avg_loss = loss["loss"]
                 avg_loss.backward()

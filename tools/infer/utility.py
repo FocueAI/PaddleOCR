@@ -648,7 +648,7 @@ def get_rotate_crop_image(img, points):
     assert len(points) == 4, "shape of points must be 4*2"
     img_crop_width = int(
         max(
-            np.linalg.norm(points[0] - points[1]), np.linalg.norm(points[2] - points[3])
+            np.linalg.norm(points[0] - points[1]), np.linalg.norm(points[2] - points[3]) # 求 0，1 两点之间的直线距离 和 2，3两点直线距离 的最大值 ，即旋转图像的宽度最大值
         )
     )
     img_crop_height = int(
@@ -664,7 +664,7 @@ def get_rotate_crop_image(img, points):
             [0, img_crop_height],
         ]
     )
-    M = cv2.getPerspectiveTransform(points, pts_std)
+    M = cv2.getPerspectiveTransform(points, pts_std)  # 将旋转矩形图像 --> 不旋转图像， 而得到的单应性矩阵!!!!
     dst_img = cv2.warpPerspective(
         img,
         M,

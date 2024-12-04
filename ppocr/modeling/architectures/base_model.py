@@ -79,39 +79,39 @@ class BaseModel(nn.Layer):
 
     def forward(self, x, data=None):
         y = dict()
-        if self.use_transform:
+        if self.use_transform: # det 并不执行
             x = self.transform(x)
-        if self.use_backbone:
-            x = self.backbone(x)
+        if self.use_backbone: # det go this way!!!
+            x = self.backbone(x)  # [[12, 256, 80, 320], [12, 512, 40, 160], [12, 768, 20, 80], [12, 1024, 10, 40]]
         if isinstance(x, dict):
             y.update(x)
-        else:
+        else: # go this way!!!
             y["backbone_out"] = x
         final_name = "backbone_out"
-        if self.use_neck:
+        if self.use_neck: # go this way!!!
             x = self.neck(x)
             if isinstance(x, dict):
                 y.update(x)
             else:
                 y["neck_out"] = x
             final_name = "neck_out"
-        if self.use_head:
+        if self.use_head: # go this way!!!
             x = self.head(x, targets=data)
             # for multi head, save ctc neck out for udml
             if isinstance(x, dict) and "ctc_neck" in x.keys():
                 y["neck_out"] = x["ctc_neck"]
                 y["head_out"] = x
-            elif isinstance(x, dict):
+            elif isinstance(x, dict):  # go this way!!!
                 y.update(x)
             else:
                 y["head_out"] = x
             final_name = "head_out"
-        if self.return_all_feats:
+        if self.return_all_feats: # don‘t go this way!!!
             if self.training:
                 return y
             elif isinstance(x, dict):
                 return x
             else:
                 return {final_name: x}
-        else:
+        else: # go this way!!!
             return x

@@ -56,8 +56,8 @@ class MakeShrinkMap(object):
             polygon = text_polys[i]
             height = max(polygon[:, 1]) - min(polygon[:, 1])
             width = max(polygon[:, 0]) - min(polygon[:, 0])
-            if ignore_tags[i] or min(height, width) < self.min_text_size:
-                cv2.fillPoly(mask, polygon.astype(np.int32)[np.newaxis, :, :], 0)
+            if ignore_tags[i] or min(height, width) < self.min_text_size: # 无效的文本区域
+                cv2.fillPoly(mask, polygon.astype(np.int32)[np.newaxis, :, :], 0)  # 无效的文本区域 设置为0
                 ignore_tags[i] = True
             else:
                 polygon_shape = Polygon(polygon)
@@ -78,11 +78,11 @@ class MakeShrinkMap(object):
                         / polygon_shape.length
                     )
                     shrinked = padding.Execute(-distance)
-                    if len(shrinked) == 1:
+                    if len(shrinked) == 1: # 仅仅变成了一个点了
                         break
 
                 if shrinked == []:
-                    cv2.fillPoly(mask, polygon.astype(np.int32)[np.newaxis, :, :], 0)
+                    cv2.fillPoly(mask, polygon.astype(np.int32)[np.newaxis, :, :], 0) # 说明该文本区域还是太小，稍微收缩下，就消失了，是无效区域 该区域设置为0
                     ignore_tags[i] = True
                     continue
 
