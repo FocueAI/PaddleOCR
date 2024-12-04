@@ -46,14 +46,17 @@ class MakeShrinkMap(object):
     def __call__(self, data):
         image = data["image"]
         text_polys = data["polys"]
+        text_classes = data.get("classes", None)
         ignore_tags = data["ignore_tags"]
 
         h, w = image.shape[:2]
         text_polys, ignore_tags = self.validate_polygons(text_polys, ignore_tags, h, w)
         gt = np.zeros((h, w), dtype=np.float32)
+        text_class = np.zeros((h,w),dtype=np.uint8)
         mask = np.ones((h, w), dtype=np.float32)
         for i in range(len(text_polys)):
             polygon = text_polys[i]
+            text_cls = text_classes[i]
             height = max(polygon[:, 1]) - min(polygon[:, 1])
             width = max(polygon[:, 0]) - min(polygon[:, 0])
             if ignore_tags[i] or min(height, width) < self.min_text_size: # 无效的文本区域
@@ -89,7 +92,13 @@ class MakeShrinkMap(object):
                 for each_shirnk in shrinked:
                     shirnk = np.array(each_shirnk).reshape(-1, 2)
                     cv2.fillPoly(gt, [shirnk.astype(np.int32)], 1)
-
+                    # 新增对 文字多分类的 处理
+                    cv2.fillPoly(text_class, [shirnk.astype(np.int32)], text_cls)  
+                    
+                    
+                    
+                    
+        data["shrink_class"] = text_class
         data["shrink_map"] = gt
         data["shrink_mask"] = mask
         return data
