@@ -143,6 +143,7 @@ class EastRandomCropData(object):
     def __call__(self, data):
         img = data["image"]
         text_polys = data["polys"]
+        text_classes = data.get("classes", None)
         ignore_tags = data["ignore_tags"]
         texts = data["texts"]
         all_care_polys = [text_polys[i] for i, tag in enumerate(ignore_tags) if not tag]
@@ -171,16 +172,19 @@ class EastRandomCropData(object):
         text_polys_crop = []
         ignore_tags_crop = []
         texts_crop = []
-        for poly, text, tag in zip(text_polys, texts, ignore_tags):
+        text_classes_crop = []
+        for poly, text, tag, cls in zip(text_polys, texts, ignore_tags, text_classes):
             poly = ((poly - (crop_x, crop_y)) * scale).tolist()
             if not is_poly_outside_rect(poly, 0, 0, w, h):
                 text_polys_crop.append(poly)
                 ignore_tags_crop.append(tag)
                 texts_crop.append(text)
+                text_classes_crop.append(cls)
         data["image"] = img  
         data["polys"] = np.array(text_polys_crop)
         data["ignore_tags"] = ignore_tags_crop
         data["texts"] = texts_crop
+        data["classes"] = text_classes_crop
         return data
 
 
