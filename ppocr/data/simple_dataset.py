@@ -46,7 +46,7 @@ class SimpleDataSet(Dataset):
         self.do_shuffle = loader_config["shuffle"]
         self.seed = seed
         logger.info("Initialize indexs of datasets:%s" % label_file_list)
-        self.data_lines = self.get_image_info_list(label_file_list, ratio_list)
+        self.data_lines = self.get_image_info_list(label_file_list, ratio_list)  # label_file_list = ["./train_data/det_bookspine_text/train.txt"]
         self.data_idx_order_list = list(range(len(self.data_lines)))
         if self.mode == "train" and self.do_shuffle:
             self.shuffle_data_random()
@@ -117,14 +117,14 @@ class SimpleDataSet(Dataset):
         return ext_data
 
     def __getitem__(self, idx):
-        file_idx = self.data_idx_order_list[idx]
-        data_line = self.data_lines[file_idx]
+        file_idx = self.data_idx_order_list[idx]  # 选取 label_file_list = ["./train_data/det_bookspine_text/train.txt" 内容行号
+        data_line = self.data_lines[file_idx]     # 获取该行的内容!!!!
         try:
             data_line = data_line.decode("utf-8")
             substr = data_line.strip("\n").split(self.delimiter)
-            file_name = substr[0]
+            file_name = substr[0]   # 类似  train/30020910.jpg	
             file_name = self._try_parse_filename_list(file_name)
-            label = substr[1]
+            label = substr[1]       # 类似 [{"transcription": "text", "class": "series", "points":},{...},...] 
             img_path = os.path.join(self.data_dir, file_name)
             data = {"img_path": img_path, "label": label}
             if not os.path.exists(img_path):

@@ -18,7 +18,7 @@ from __future__ import print_function
 
 import os
 os.environ['FLAGS_eager_delete_tensor_gb'] = '0.0'
-# os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import sys
 
 __dir__ = os.path.dirname(os.path.abspath(__file__))
