@@ -50,7 +50,7 @@ class SimpleDataSet(Dataset):
         self.data_idx_order_list = list(range(len(self.data_lines)))
         if self.mode == "train" and self.do_shuffle:
             self.shuffle_data_random()
-        self.ops = create_operators(dataset_config["transforms"], global_config)
+        self.ops = create_operators(dataset_config["transforms"], global_config)  # 配置处理数据的 代码逻辑部分！！！
         self.ext_op_transform_idx = dataset_config.get("ext_op_transform_idx", 2)
         self.need_reset = True in [x < 1 for x in ratio_list]
 
