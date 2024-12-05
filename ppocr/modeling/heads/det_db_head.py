@@ -169,7 +169,7 @@ class PFHeadLocal(DBHead):
         cbn_maps = self.cbn_layer(self.up_conv(f), shrink_maps, None) # [12, 1, 320, 1280]
         cbn_maps = F.sigmoid(cbn_maps) # [12, 1, 320, 1280]
         if not self.training:
-            return {"maps": 0.5 * (base_maps + cbn_maps), "cbn_maps": cbn_maps}
+            return {"maps": 0.5 * (base_maps + cbn_maps), "cbn_maps": cbn_maps, "mulcls_feature": mulcls_feature}
 
         threshold_maps = self.thresh(x)  # [12, 1, 320, 1280]
         binary_maps = self.step_function(shrink_maps, threshold_maps) # shrink_maps.shape=threshold_maps.shape=[12, 1, 320, 1280],,,,,,,binary_maps.shape=[12, 1, 320, 1280]

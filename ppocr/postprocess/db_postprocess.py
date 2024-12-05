@@ -55,6 +55,7 @@ class DBPostProcess(object):
         ], "Score mode must be in [slow, fast] but got: {}".format(score_mode)
 
         self.dilation_kernel = None if not use_dilation else np.array([[1, 1], [1, 1]])
+        self.softmax_layer = paddle.nn.Softmax(axis=1)
 
     def polygons_from_bitmap(self, pred, _bitmap, dest_width, dest_height):
         """
@@ -225,6 +226,14 @@ class DBPostProcess(object):
         return cv2.mean(bitmap[ymin : ymax + 1, xmin : xmax + 1], mask)[0]
 
     def __call__(self, outs_dict, shape_list):
+        pred_mulcls = outs_dict["mulcls_feature"]
+        if isinstance(pred_mulcls, paddle.Tensor):
+            pred_mulcls = self.softmax_layer(pred_mulcls).cpu().numpy() # pred_mulcls.shape=[1,8,96,1280]
+        ######################### 处理 ###################################
+        pred_mulcls = np.transpose(pred_mulcls, (0,2,3,1)) # pred_mulcls.shape=[batch=1,h=96,w=1280,cls_num=8]
+        pred_mulcls = pred_mulcls.argmax(axis=-1)
+        # TODO: 明天继续编写 多分类 的处理逻辑
+        ############################################################
         pred = outs_dict["maps"]
         if isinstance(pred, paddle.Tensor):
             pred = pred.numpy()

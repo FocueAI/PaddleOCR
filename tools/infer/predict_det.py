@@ -13,7 +13,7 @@
 # limitations under the License.
 import os
 import sys
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(__dir__)
 sys.path.insert(0, os.path.abspath(os.path.join(__dir__, "../..")))
@@ -237,7 +237,7 @@ class TextDetector(object):
             self.autolog.times.start()
 
         data = transform(data, self.preprocess_op)
-        img, shape_list = data
+        img, shape_list = data  # shape_list 好像出了问题
         if img is None:
             return None, 0
         img = np.expand_dims(img, axis=0)
@@ -250,7 +250,7 @@ class TextDetector(object):
             input_dict = {}
             input_dict[self.input_tensor.name] = img
             outputs = self.predictor.run(self.output_tensors, input_dict)
-        else:
+        else: # go this way!!!
             self.input_tensor.copy_from_cpu(img)
             self.predictor.run()
             outputs = []
