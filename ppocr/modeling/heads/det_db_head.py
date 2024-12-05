@@ -162,7 +162,7 @@ class PFHeadLocal(DBHead):
         elif self.mode == "small":
             self.cbn_layer = LocalModule(in_channels // 4, in_channels // 8)
 
-    def forward(self, x, targets=None):  # x.shape=[12, 256, 80, 320]  
+    def forward(self, x, targets=None):  # x.shape=[12, 256, 80, 320]    
         shrink_maps, f = self.binarize(x, return_f=True) # shrink_maps.shape=[12, 1, 320, 1280] ---> 这已经是原图大小了,  f.shape=[12, 64, 160, 640]
         mulcls_feature = self.mulcls(x,only_return_mulcls=True)
         base_maps = shrink_maps
