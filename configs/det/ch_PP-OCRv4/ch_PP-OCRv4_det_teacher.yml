@@ -35,7 +35,7 @@ Architecture:
     k: 50
     mode: "large"
     #===========================================================》 new add ====> 多分类分别数量
-    n_cls: 7
+    n_cls: 8
     
 
 Loss:
@@ -83,6 +83,7 @@ Train:
     - DetLabelEncode: #null
     #===========================================================》 new add ====> 多分类类别
        class2id:
+       - bg
        - series
        - barcode
        - author
@@ -161,6 +162,7 @@ Eval:
         channel_first: false
     - DetLabelEncode: # null
         class2id:
+        - bg
         - series
         - barcode
         - author
