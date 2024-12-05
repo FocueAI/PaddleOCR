@@ -72,9 +72,9 @@ Metric:
 Train:
   dataset:
     name: SimpleDataSet
-    data_dir: ./train_data/det_bookspine_text/
+    data_dir: ./train_data_new/det_bookspine_text/
     label_file_list:
-      - ./train_data/det_bookspine_text/train.txt
+      - ./train_data_new/det_bookspine_text/train.txt
     ratio_list: [1.0]
     transforms:
     - DecodeImage:
@@ -151,9 +151,9 @@ Train:
 Eval:
   dataset:
     name: SimpleDataSet
-    data_dir: ./train_data/det_bookspine_text/
+    data_dir: ./train_data_new/det_bookspine_text/
     label_file_list:
-      - ./train_data/det_bookspine_text/val.txt
+      - ./train_data_new/det_bookspine_text/val.txt
     transforms:
     - DecodeImage:
         img_mode: BGR
