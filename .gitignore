@@ -43,3 +43,8 @@ checkpoints/
 ch_PP-OCRv4_det_server_train/
 ch_PP-OCRv4_rec_server_train/
 debug/
+
+
+train_data_new/det_bookspine_text/
+# !train_data_new/deal_data_det.ipynb
+

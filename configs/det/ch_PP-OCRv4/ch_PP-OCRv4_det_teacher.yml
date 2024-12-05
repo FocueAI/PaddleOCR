@@ -34,6 +34,8 @@ Architecture:
     name: PFHeadLocal
     k: 50
     mode: "large"
+    #===========================================================》 new add ====> 多分类分别数量
+    n_cls: 7
     
 
 Loss:
@@ -78,7 +80,18 @@ Train:
     - DecodeImage:
         img_mode: BGR
         channel_first: false
-    - DetLabelEncode: null
+    - DetLabelEncode: #null
+    #===========================================================》 new add ====> 多分类分别数量
+       class2id:
+       - series
+       - barcode
+       - author
+       - public
+       - title
+       - call_no
+       - other
+
+
     - CopyPaste: null
     - IaaAugment:
         augmenter_args:
