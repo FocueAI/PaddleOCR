@@ -142,6 +142,7 @@ Train:
         - threshold_mask
         - shrink_map
         - shrink_mask
+        - shrink_class
   loader:
     shuffle: true
     drop_last: false
@@ -188,6 +189,7 @@ Eval:
         - shape
         - polys
         - ignore_tags
+        - shrink_class
   loader:
     shuffle: false
     drop_last: false
