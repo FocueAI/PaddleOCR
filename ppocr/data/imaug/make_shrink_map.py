@@ -98,7 +98,7 @@ class MakeShrinkMap(object):
                     
                     
                     
-        data["shrink_class"] = text_class
+        data["shrink_class"] = text_class.astype(np.int64)
         data["shrink_map"] = gt
         data["shrink_mask"] = mask
         return data

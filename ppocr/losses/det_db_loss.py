@@ -53,6 +53,7 @@ class DBLoss(nn.Layer):
             main_loss_type=main_loss_type,
             negative_ratio=ohem_ratio,
         )
+        self.cross_entropy_loss = nn.CrossEntropyLoss(axis=1)
 
     def forward(self, predicts, labels):
         predict_maps = predicts["maps"]
@@ -61,10 +62,17 @@ class DBLoss(nn.Layer):
             label_threshold_mask,
             label_shrink_map,
             label_shrink_mask,
+            label_shrink_class
         ) = labels[1:]
         shrink_maps = predict_maps[:, 0, :, :]    # 特征图 ----> cbn -----> sigmoid ----> 
         threshold_maps = predict_maps[:, 1, :, :] # 特征图 ----> 阈值网络 --->
         binary_maps = predict_maps[:, 2, :, :]   # 相当于一个动态阈值
+        shrink_class = predicts["mulcls_feature"] # 对应的多分类  label_shrink_class   ===================> 正在考虑是否加上背景分类
+
+        # label = paddle.unsqueeze(label_shrink_class, axis=1)
+        loss_shrink_cls = self.cross_entropy_loss(shrink_class,label_shrink_class)
+       
+
 
         loss_shrink_maps = self.bce_loss(
             shrink_maps, label_shrink_map, label_shrink_mask   # 向外扩张后的文字区域，损失计算
@@ -75,8 +83,8 @@ class DBLoss(nn.Layer):
         loss_binary_maps = self.dice_loss(     # 向外扩张后的文字区域，动态阈值损失计算
             binary_maps, label_shrink_map, label_shrink_mask
         )
-        loss_shrink_maps = self.alpha * loss_shrink_maps
-        loss_threshold_maps = self.beta * loss_threshold_maps
+        loss_shrink_maps = self.alpha * loss_shrink_maps  # 5 *
+        loss_threshold_maps = self.beta * loss_threshold_maps # 10 * 
         # CBN loss
         if "distance_maps" in predicts.keys():
             distance_maps = predicts["distance_maps"]
@@ -88,12 +96,13 @@ class DBLoss(nn.Layer):
             dis_loss = paddle.to_tensor([0.0])
             cbn_loss = paddle.to_tensor([0.0])
 
-        loss_all = loss_shrink_maps + loss_threshold_maps + loss_binary_maps
+        loss_all = loss_shrink_maps + loss_threshold_maps + loss_binary_maps + loss_shrink_cls
         losses = {
             "loss": loss_all + cbn_loss,
             "loss_shrink_maps": loss_shrink_maps,
             "loss_threshold_maps": loss_threshold_maps,
             "loss_binary_maps": loss_binary_maps,
             "loss_cbn": cbn_loss,
+            "loss_shrink_cls":loss_shrink_cls
         }
         return losses

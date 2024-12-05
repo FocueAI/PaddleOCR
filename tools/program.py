@@ -308,8 +308,8 @@ def train(
             if idx >= max_iter:
                 break
             lr = optimizer.get_lr()
-            images = batch[0]
-            if use_srn:
+            images = batch[0]  #  batch=['image', 'threshold_map', 'threshold_mask', 'shrink_map', 'shrink_mask', 'shrink_class']
+            if use_srn:        #  [[12, 3, 320, 1280], [12, 320, 1280], [12, 320, 1280], [12, 320, 1280], [12, 320, 1280], [12, 320, 1280]]
                 model_average = True
             # use amp
             if scaler:

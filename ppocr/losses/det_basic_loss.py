@@ -86,11 +86,11 @@ class BalanceLoss(nn.Layer):
             mask (variable): masked maps.
         return: (variable) balanced loss
         """
-        positive = gt * mask
-        negative = (1 - gt) * mask
+        positive = gt * mask        #  有效的文本区域
+        negative = (1 - gt) * mask  #  除了坏文本区域以外的 背景区域 ====》 统称 背景区域
 
-        positive_count = int(positive.sum())
-        negative_count = int(min(negative.sum(), positive_count * self.negative_ratio))
+        positive_count = int(positive.sum())                        # 有效文本区域 ----- 占用的像素数量
+        negative_count = int(min(negative.sum(), positive_count * self.negative_ratio)) # min(背景区域的像素数， 有效文本区域的的3倍值)
         loss = self.loss(pred, gt, mask=mask)
 
         if not self.balance_loss:
