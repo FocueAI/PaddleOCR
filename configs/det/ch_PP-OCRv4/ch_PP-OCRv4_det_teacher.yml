@@ -86,7 +86,7 @@ Train:
        - series
        - barcode
        - author
-       - public
+       - publish
        - title
        - call_no
        - other
@@ -163,7 +163,7 @@ Eval:
         - series
         - barcode
         - author
-        - public
+        - publish
         - title
         - call_no
         - other

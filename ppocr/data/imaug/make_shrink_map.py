@@ -93,7 +93,7 @@ class MakeShrinkMap(object):
                     shirnk = np.array(each_shirnk).reshape(-1, 2)
                     cv2.fillPoly(gt, [shirnk.astype(np.int32)], 1)
                     # 新增对 文字多分类的 处理
-                    cv2.fillPoly(text_class, [shirnk.astype(np.int32)], text_cls)  
+                    cv2.fillPoly(text_class, [shirnk.astype(np.int32)], int(text_cls))  
                     
                     
                     

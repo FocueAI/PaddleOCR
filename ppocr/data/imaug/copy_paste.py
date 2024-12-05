@@ -37,6 +37,8 @@ class CopyPaste(object):
         src_polys = data["polys"].tolist()
         src_texts = data["texts"]
         src_classes = data.get("classes", None)
+        if src_classes is not None:
+            src_classes = data["classes"].tolist()
         src_ignores = data["ignore_tags"].tolist()
         
         ext_data = data["ext_data"][0]
