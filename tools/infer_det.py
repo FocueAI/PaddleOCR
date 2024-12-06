@@ -39,19 +39,34 @@ from ppocr.utils.utility import get_image_file_list
 import tools.program as program
 
 
+"""
+python tools/infer_det.py --config /mnt/disk4/projects/expore/PaddleOCR-det-mulcls/configs/det/ch_PP-OCRv4/ch_PP-OCRv4_det_teacher.yml
+
+"""
+
+
+
 def draw_det_res(dt_boxes, classes, config, img, img_name, save_path):
     import cv2
-
+    class_name = config["Train"]["dataset"]["transforms"][1]["DetLabelEncode"]["class2id"]
     src_im = img
     for box, cls in zip(dt_boxes,classes):
         box = np.array(box).astype(np.int32).reshape((-1, 1, 2))
+        
+        x0, y0 = int(box[0,0,0]),int(box[0,0,1])
+        x3, y3 = int(box[3,0,0]),int(box[3,0,1])
+        
+        center_x = (x0 + x3)//2
+        center_y = (y0 + y3)//2
+        
+        
         cv2.polylines(src_im, [box], True, color=(255, 255, 0), thickness=2)
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = 1
         color = (0, 255, 0)  # 绿色
         thickness = 2
         line_type = cv2.LINE_AA
-        cv2.putText(src_im,str(cls), (int(box[0,0,0]),int(box[0,0,1])), font, font_scale, color, thickness, line_type)
+        cv2.putText(src_im,class_name[int(cls)], (center_x, center_y), font, font_scale, color, thickness, line_type)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     save_path = os.path.join(save_path, os.path.basename(img_name))
