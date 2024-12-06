@@ -107,9 +107,9 @@ class DBPostProcess(object):
             scores.append(score)
         return boxes, scores
 
-    def boxes_from_bitmap(self, pred, _bitmap, dest_width, dest_height):
+    def boxes_from_bitmap(self, pred, _bitmap, pred_mulcls, dest_width, dest_height):
         """
-        _bitmap: single map with shape (1, H, W),
+        _bitmap: single map with shape (1, H, W),     # ====>pred.shape=_bitmap.shape=pred_mulcls.shape=[h=96,w=1280]
                 whose values are binarized as {0, 1}
         """
 
@@ -128,6 +128,7 @@ class DBPostProcess(object):
 
         boxes = []
         scores = []
+        classes = []
         for index in range(num_contours):
             contour = contours[index]
             points, sside = self.get_mini_boxes(contour)
@@ -135,7 +136,7 @@ class DBPostProcess(object):
                 continue
             points = np.array(points)
             if self.score_mode == "fast":
-                score = self.box_score_fast(pred, points.reshape(-1, 2))
+                score, cls = self.box_score_fast(pred, pred_mulcls, contour, points.reshape(-1, 2))
             else:
                 score = self.box_score_slow(pred, contour)
             if self.box_thresh > score:
@@ -156,7 +157,8 @@ class DBPostProcess(object):
             )
             boxes.append(box.astype("int32"))
             scores.append(score)
-        return np.array(boxes, dtype="int32"), scores
+            classes.append(cls)
+        return np.array(boxes, dtype="int32"), scores, classes
 
     def unclip(self, box, unclip_ratio):
         poly = Polygon(box)
@@ -187,9 +189,11 @@ class DBPostProcess(object):
         box = [points[index_1], points[index_2], points[index_3], points[index_4]]
         return box, min(bounding_box[1])
 
-    def box_score_fast(self, bitmap, _box):
+    def box_score_fast(self, bitmap, pred_mulcls, contour, _box):
         """
         box_score_fast: use bbox mean score as the mean score
+        pred_mulcls: new add 预测区域类别
+        contour: 该区域对应的多边形
         """
         h, w = bitmap.shape[:2]
         box = _box.copy()
@@ -202,7 +206,13 @@ class DBPostProcess(object):
         box[:, 0] = box[:, 0] - xmin
         box[:, 1] = box[:, 1] - ymin
         cv2.fillPoly(mask, box.reshape(1, -1, 2).astype("int32"), 1)
-        return cv2.mean(bitmap[ymin : ymax + 1, xmin : xmax + 1], mask)[0]
+        pred_mulcls_ = (pred_mulcls[ymin : ymax + 1, xmin : xmax + 1]).reshape(-1)
+        pred_mulcls_ = pred_mulcls_[pred_mulcls_>0]
+        try:
+            box_class = np.argmax(np.bincount(pred_mulcls_))
+        except:
+            box_class = 0
+        return cv2.mean(bitmap[ymin : ymax + 1, xmin : xmax + 1], mask)[0], box_class
 
     def box_score_slow(self, bitmap, contour):
         """
@@ -233,7 +243,7 @@ class DBPostProcess(object):
         pred_mulcls = np.transpose(pred_mulcls, (0,2,3,1)) # pred_mulcls.shape=[batch=1,h=96,w=1280,cls_num=8]
         pred_mulcls = pred_mulcls.argmax(axis=-1)
         # TODO: 明天继续编写 多分类 的处理逻辑
-        ############################################################
+        #################################################################
         pred = outs_dict["maps"]
         if isinstance(pred, paddle.Tensor):
             pred = pred.numpy()
@@ -244,7 +254,7 @@ class DBPostProcess(object):
         for batch_index in range(pred.shape[0]):
             src_h, src_w, ratio_h, ratio_w = shape_list[batch_index]
             if self.dilation_kernel is not None:
-                mask = cv2.dilate(
+                mask = cv2.dilate( # 膨胀操作，增大白色区域的面积(这里指的是文本区域!!!!)
                     np.array(segmentation[batch_index]).astype(np.uint8),
                     self.dilation_kernel,
                 )
@@ -255,13 +265,13 @@ class DBPostProcess(object):
                     pred[batch_index], mask, src_w, src_h
                 )
             elif self.box_type == "quad":
-                boxes, scores = self.boxes_from_bitmap(
-                    pred[batch_index], mask, src_w, src_h
+                boxes, scores, classes = self.boxes_from_bitmap(
+                    pred[batch_index], mask, pred_mulcls[batch_index], src_w, src_h
                 )
             else:
                 raise ValueError("box_type can only be one of ['quad', 'poly']")
 
-            boxes_batch.append({"points": boxes})
+            boxes_batch.append({"points": boxes, "scores":scores, "classes":classes})
         return boxes_batch
 
 

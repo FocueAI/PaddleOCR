@@ -39,13 +39,19 @@ from ppocr.utils.utility import get_image_file_list
 import tools.program as program
 
 
-def draw_det_res(dt_boxes, config, img, img_name, save_path):
+def draw_det_res(dt_boxes, classes, config, img, img_name, save_path):
     import cv2
 
     src_im = img
-    for box in dt_boxes:
+    for box, cls in zip(dt_boxes,classes):
         box = np.array(box).astype(np.int32).reshape((-1, 1, 2))
         cv2.polylines(src_im, [box], True, color=(255, 255, 0), thickness=2)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 1
+        color = (0, 255, 0)  # 绿色
+        thickness = 2
+        line_type = cv2.LINE_AA
+        cv2.putText(src_im,str(cls), (int(box[0,0,0]),int(box[0,0,1])), font, font_scale, color, thickness, line_type)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     save_path = os.path.join(save_path, os.path.basename(img_name))
@@ -113,8 +119,9 @@ def main():
                         config["Global"]["save_res_path"]
                     ) + "/det_results_{}/".format(k)
                     draw_det_res(boxes, config, src_img, file, save_det_path)
-            else:
+            else: # go this way!!!!
                 boxes = post_result[0]["points"]
+                classes = post_result[0]["classes"]
                 dt_boxes_json = []
                 # write result
                 for box in boxes:
@@ -124,7 +131,7 @@ def main():
                 save_det_path = (
                     os.path.dirname(config["Global"]["save_res_path"]) + "/det_results/"
                 )
-                draw_det_res(boxes, config, src_img, file, save_det_path)
+                draw_det_res(boxes, classes, config, src_img, file, save_det_path)
             otstr = file + "\t" + json.dumps(dt_boxes_json) + "\n"
             fout.write(otstr.encode())
 
