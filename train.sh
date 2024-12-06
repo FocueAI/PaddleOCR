@@ -52,3 +52,6 @@ python tools/export_model.py -c configs/rec/PP-OCRv4/ch_PP-OCRv4_rec_hgnet.yml -
 
 
 
+nohup python -u tools/train.py -c configs/det/ch_PP-OCRv4/ch_PP-OCRv4_det_teacher.yml >train-12-6.log &
+
+python -u tools/infer_det.py -c configs/det/ch_PP-OCRv4/ch_PP-OCRv4_det_teacher.yml

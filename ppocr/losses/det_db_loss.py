@@ -96,7 +96,7 @@ class DBLoss(nn.Layer):
             dis_loss = paddle.to_tensor([0.0])
             cbn_loss = paddle.to_tensor([0.0])
 
-        loss_all = loss_shrink_maps + loss_threshold_maps + loss_binary_maps + loss_shrink_cls
+        loss_all = loss_shrink_maps + loss_threshold_maps + loss_binary_maps + loss_shrink_cls*15
         losses = {
             "loss": loss_all + cbn_loss,
             "loss_shrink_maps": loss_shrink_maps,
