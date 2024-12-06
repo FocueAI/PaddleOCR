@@ -1,0 +1,17 @@
+# 原始的标签类型  图像名称\tab[{"transcription": "text", "points":坐标}，....]
+train/30020910.jpg	
+[
+ {"transcription": "text", "points": [[1992, 35], [2243, 35], [2243, 93], [1992, 93]]}, 
+ {"transcription": "text", "points": [[1163, 33], [1375, 32], [1376, 74], [1163, 74]]}, 
+ {"transcription": "text", "points": [[228, 35], [446, 35], [443, 73], [227, 73]]}, 
+ {"transcription": "text", "points": [[548, 19], [1109, 16], [1109, 84], [548, 87]]}
+]
+
+现在修改为=================> 
+train/30020910.jpg	
+[                         <-----box类别----->
+ {"transcription": "text", "class": "series", "points": [[1992, 35], [2243, 35], [2243, 93], [1992, 93]]}, 
+ {"transcription": "text", "class": "barcode", "points": [[1163, 33], [1375, 32], [1376, 74], [1163, 74]]}, 
+ {"transcription": "text", "class": "title", "points": [[228, 35], [446, 35], [443, 73], [227, 73]]}, 
+ {"transcription": "text", "class": "call_no", "points": [[548, 19], [1109, 16], [1109, 84], [548, 87]]}
+]

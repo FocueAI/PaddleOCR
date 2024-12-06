@@ -1,0 +1,110 @@
+class DetLabelEncode(object):
+    def __init__(self, **kwargs):
+        # pass
+        self.class2id = kwargs["class2id"] # eg:  ["series", "barcode", "title", "call_no",...]
+
+    def __call__(self, data):
+        label = data["label"]
+        label = json.loads(label)
+        nBox = len(label)
+        boxes, txts, txt_tags, classes = [], [], [], []
+        for bno in range(0, nBox):
+            box = label[bno]["points"]
+            txt = label[bno]["transcription"]
+            cls = label[bno]["class"]
+            boxes.append(box)
+            txts.append(txt)
+            classes.append(self.class2id.index(cls)) # 新增的 文本类别
+            if txt in ["*", "###"]:
+                txt_tags.append(True)
+            else:
+                txt_tags.append(False)
+        if len(boxes) == 0:
+            return None
+        boxes = self.expand_points_num(boxes)
+        boxes = np.array(boxes, dtype=np.float32)
+        classes = np.array(classes, dtype=np.uint16)
+        txt_tags = np.array(txt_tags, dtype=np.bool_)
+
+        data["polys"] = boxes
+        data["texts"] = txts
+        data["ignore_tags"] = txt_tags
+        data["classes"] = classes
+        return data
+		
+###############################################################################################################
+def __call__(self, outs_dict, shape_list):
+	pred_mulcls = outs_dict["mulcls_feature"]
+	if isinstance(pred_mulcls, paddle.Tensor):
+		pred_mulcls = self.softmax_layer(pred_mulcls).cpu().numpy() # pred_mulcls.shape=[1,8,96,1280]
+	######################### 处理 ###################################
+	pred_mulcls = np.transpose(pred_mulcls, (0,2,3,1)) # pred_mulcls.shape=[batch=1,h=96,w=1280,cls_num=8]
+	pred_mulcls = pred_mulcls.argmax(axis=-1)
+	# TODO: 明天继续编写 多分类 的处理逻辑
+	############################################################
+	pred = outs_dict["maps"]
+	if isinstance(pred, paddle.Tensor):
+		pred = pred.numpy()
+	pred = pred[:, 0, :, :]
+	segmentation = pred > self.thresh
+
+	boxes_batch = []
+	for batch_index in range(pred.shape[0]):
+		src_h, src_w, ratio_h, ratio_w = shape_list[batch_index]
+		if self.dilation_kernel is not None:
+			mask = cv2.dilate(
+				np.array(segmentation[batch_index]).astype(np.uint8),
+				self.dilation_kernel,
+			)
+		else:
+			mask = segmentation[batch_index]
+		if self.box_type == "poly":
+			boxes, scores = self.polygons_from_bitmap(
+				pred[batch_index], mask, src_w, src_h
+			)
+		elif self.box_type == "quad":
+			boxes, scores = self.boxes_from_bitmap(
+				pred[batch_index], mask, src_w, src_h
+			)
+		else:
+			raise ValueError("box_type can only be one of ['quad', 'poly']")
+
+		boxes_batch.append({"points": boxes})
+	return boxes_batch
+##############################################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

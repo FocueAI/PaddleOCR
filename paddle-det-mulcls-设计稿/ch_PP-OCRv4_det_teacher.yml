@@ -1,0 +1,331 @@
+Global:
+  debug: false
+  use_gpu: true
+  epoch_num: &epoch_num 500
+  log_smooth_window: 20
+  print_batch_step: 1
+  save_model_dir: ./output/ch_PP-OCRv4-teacher-9-9
+  save_epoch_step: 10
+  eval_batch_step:
+  - 0
+  - 99999999 #1500
+  cal_metric_during_train: false
+  checkpoints: /usr/projects/PaddleOCR-det-use-book-spine-data-finetuning/ch_PP-OCRv4_det_server_train/best_accuracy.pdparams  
+  pretrained_model: https://paddleocr.bj.bcebos.com/pretrained/PPHGNet_small_ocr_det.pdparams
+  save_inference_dir: null
+  use_visualdl: false
+  infer_img: doc/imgs_en/img_10.jpg
+  save_res_path: ./checkpoints/det_db/predicts_db.txt
+  distributed: true
+  log_ranks: 0
+
+Architecture:
+  model_type: det
+  algorithm: DB
+  Transform: null
+  Backbone:
+    name: PPHGNet_small
+    det: True
+  Neck:
+    name: LKPAN
+    out_channels: 256
+    intracl: true
+  Head:
+    name: PFHeadLocal
+    k: 50
+    mode: "large"
+    #===》 new add ====> 多分类分别数量
+    n_cls: 5
+    
+
+# class PFHeadLocal(DBHead):
+    # def __init__(self, in_channels, k=50, mode="small", **kwargs):
+        # super(PFHeadLocal, self).__init__(in_channels, k, **kwargs)
+        # self.mode = mode
+        
+        
+Loss:
+  name: DBLoss
+  balance_loss: true
+  main_loss_type: DiceLoss
+  alpha: 5
+  beta: 10
+  ohem_ratio: 3
+
+Optimizer:
+  name: Adam
+  beta1: 0.9
+  beta2: 0.999
+  lr:
+    name: Cosine
+    learning_rate: 0.0005 #(8*8c)
+    warmup_epoch: 2
+  regularizer:
+    name: L2
+    factor: 1e-6
+
+PostProcess:
+  name: DBPostProcess
+  thresh: 0.3
+  box_thresh: 0.6
+  max_candidates: 1000
+  unclip_ratio: 1.5
+
+Metric:
+  name: DetMetric
+  main_indicator: hmean
+
+#############################################################################
+class DetLabelEncode(object):
+    def __init__(self, **kwargs):
+        # pass
+        # self.class2id = kwargs["class2id"] # eg:  ["series", "barcode", "title", "call_no",...]
+        self.class2id = kwargs.get("class2id", None)
+
+##############################################################################
+
+
+
+
+op = [
+  [
+   1：DecodeImage, 
+        """ 读取图像 很纯粹！！！"""
+        data["image"] = img # 就是用opencv读取的对应格式的图像
+               
+   2：DetLabelEncode,
+        """读取标签内容"""
+        data["polys"] = boxes
+        data["texts"] = txts
+        data["ignore_tags"] = txt_tags
+        if self.class2id is not None:
+            data["classes"] = classes ## 需增加 data["classes"] 的相关逻辑
+   3：CopyPaste ------> 数据增强的一种
+       """ 从其他图像上挖去文本片段 到 src_img, 则对应的标签值也要跟着发生改变 """
+       data["image"] = src_img   # 可能是 被粘贴过其他 图像文本片段的 更新后的图片
+       data["polys"] = src_polys # 更新后的 boxes 信息
+       data["texts"] = src_texts # 更新后的 texts 信息
+       ## 需增加 data["classes"] 的相关逻辑
+       data["ignore_tags"] = np.array(src_ignores)
+   4：IaaAugment ------> 数据增强的一种
+       """
+       from imgaug import augmenters as iaa
+       # ------------------- 方法一: 
+       # 创建一个水平翻转的增强器，有50%的概率翻转图像
+       fliplr = iaa.Fliplr(0.5)
+       # 应用增强器到图像上
+       image_aug = fliplr.augment_image(image)
+       # -------------------- 方法二：
+       # 创建一个仿射变换的增强器，旋转 -10 ~ 10度之间
+       affine = iaa.Affine( rotate=(-10, 10))
+       # 应用增强器到图像上
+       image_aug = affine.augment_image(image)
+       # -------------------- 方法三：
+       # 创建一个调整图像大小的增强器，图像的宽高同时 变为原先的 0.5~3倍之间
+       resize = iaa.Resize({"size": [0.5, 3]})
+       # 应用增强器到图像上
+       image_aug = resize.augment_image(image)
+       """
+       data["image"] = aug.augment_image(image) # 数据增强后的图像
+       data["polys"] = np.array(line_polys)     # 对应的标签数据也跟着更新
+       
+    5: EastRandomCropData------>随机裁剪
+        """
+        size:
+        - 1280 #640  ----- 宽
+        - 320  #640  ----- 高
+        max_tries: 50
+        keep_ratio: true
+        """
+        data["image"] = img   # 可能裁剪到的图像块，贴在黑色背景上
+        data["polys"] = np.array(text_polys_crop) # 对应的box的变化
+        data["ignore_tags"] = ignore_tags_crop
+        data["texts"] = texts_crop
+        ## 需增加 data["classes"] 的相关逻辑
+        
+        
+    6.  MakeBorderMap # 相当于围绕box的边界打标，边界部分为1，向内收缩，向外扩张 按照距离逐渐递减为0
+        """
+        shrink_ratio: 0.4
+        thresh_min: 0.3
+        thresh_max: 0.7
+        total_epoch: *epoch_num
+        """
+        data["threshold_map"] = canvas  # 文字区域，标签box一周都是1， 先外扩展的区域，向内收缩的区域 按照距离逐渐递减为0，背景也为0
+        data["threshold_mask"] = mask   # 文字区域（按照一定比例扩大一部分）的区域设置为1， 其他为0
+        # 不用做任何处理
+        
+    7.   MakeShrinkMap
+        """
+        shrink_ratio: 0.4
+        min_text_size: 8
+        total_epoch: *epoch_num
+        """
+        
+        data["shrink_map"] = gt     # 初始化为全0， 文本区域设置为1
+        data["shrink_mask"] = mask  # 初始化为全1， 无效的文本区域设置为了0
+        ################### 重点对多分类的情况做处理!!!!
+        data["shrink_class"] = text_class
+        
+        #################################################
+          
+    8.  NormalizeImage   
+        data["image"] = (img.astype("float32") * self.scale - self.mean) / self.std
+    
+    9.  ToCHWImage
+        data["image"] = img.transpose((2, 0, 1))
+   
+    10. KeepKeys
+        ['image', 'threshold_map', 'threshold_mask', 'shrink_map', 'shrink_mask', 'shrink_class']
+        
+        
+images = batch[0]  
+#  batch=['image', 'threshold_map', 'threshold_mask', 'shrink_map', 'shrink_mask', 'shrink_class']
+#  [[12, 3, 320, 1280], [12, 320, 1280], [12, 320, 1280], [12, 320, 1280], [12, 320, 1280], [12, 320, 1280]]     
+        
+return {"maps": y, "distance_maps": cbn_maps, "cbn_maps": binary_maps, "mulcls_feature": mulcls_feature}       
+        
+############################# 损失函数的研究 ################################
+Loss:
+  name: DBLoss
+  balance_loss: true
+  main_loss_type: DiceLoss
+  alpha: 5
+  beta: 10
+  ohem_ratio: 3
+  
+self.bce_loss = BalanceLoss(
+    balance_loss=True,
+    main_loss_type="DiceLoss",
+    negative_ratio=ohem_ratio,
+)
+        
+        
+        
+        
+        
+        
+##############################################################################        
+        #     - 1280 #640
+    #     - 320  #640    
+        
+]
+###########################################################
+Train:
+  dataset:
+    name: SimpleDataSet
+    data_dir: ./train_data/det_bookspine_text/
+    label_file_list:
+      - ./train_data/det_bookspine_text/train.txt
+    ratio_list: [1.0]
+    transforms:
+    - DecodeImage:
+        img_mode: BGR
+        channel_first: false
+    #- DetLabelEncode: null
+    - DetLabelEncode: # 
+       # 请修改 or 补充 不同的标签对应的序号
+       class2id:
+       - bg
+       - series
+       - barcode
+       - author
+       - publish
+       - title
+       - call_no
+       - other
+       
+    - CopyPaste: null
+    - IaaAugment:
+        augmenter_args:
+        - type: Fliplr
+          args:
+            p: 0.5
+        - type: Affine
+          args:
+            rotate:
+            - -10
+            - 10
+        - type: Resize
+          args:
+            size:
+            - 0.5
+            - 3
+    - EastRandomCropData:
+        size:
+        - 1280 #640
+        - 320  #640
+        max_tries: 50
+        keep_ratio: true
+    - MakeBorderMap:
+        shrink_ratio: 0.4
+        thresh_min: 0.3
+        thresh_max: 0.7
+        total_epoch: *epoch_num
+    - MakeShrinkMap:
+        shrink_ratio: 0.4
+        min_text_size: 8
+        total_epoch: *epoch_num
+    - NormalizeImage:
+        scale: 1./255.
+        mean:
+        - 0.485
+        - 0.456
+        - 0.406
+        std:
+        - 0.229
+        - 0.224
+        - 0.225
+        order: hwc
+    - ToCHWImage: null
+    - KeepKeys:
+        keep_keys:
+        - image
+        - threshold_map
+        - threshold_mask
+        - shrink_map
+        - shrink_mask
+  loader:
+    shuffle: true
+    drop_last: false
+    batch_size_per_card: 12 # 8
+    num_workers: 0
+
+Eval:
+  dataset:
+    name: SimpleDataSet
+    data_dir: ./train_data/det_bookspine_text/
+    label_file_list:
+      - ./train_data/det_bookspine_text/val.txt
+    transforms:
+    - DecodeImage:
+        img_mode: BGR
+        channel_first: false
+    - DetLabelEncode: null
+    - DetResizeForTest:
+        limit_side_len: 1280
+        limit_type: max
+    - NormalizeImage:
+        scale: 1./255.
+        mean:
+        - 0.485
+        - 0.456
+        - 0.406
+        std:
+        - 0.229
+        - 0.224
+        - 0.225
+        order: hwc
+    - ToCHWImage: null
+    - KeepKeys:
+        keep_keys:
+        - image
+        - shape
+        - polys
+        - ignore_tags
+  loader:
+    shuffle: false
+    drop_last: false
+    batch_size_per_card: 1
+    num_workers: 0
+profiler_options: null
