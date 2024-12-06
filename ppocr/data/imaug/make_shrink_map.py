@@ -92,7 +92,7 @@ class MakeShrinkMap(object):
                 for each_shirnk in shrinked:
                     shirnk = np.array(each_shirnk).reshape(-1, 2)
                     cv2.fillPoly(gt, [shirnk.astype(np.int32)], 1)
-                    # 新增对 文字多分类的 处理
+                    # 新增对 文字多分类的 处理 将 shirnk ==替换成==》polygon ----------------------感觉更合适!!!
                     cv2.fillPoly(text_class, [shirnk.astype(np.int32)], int(text_cls))  
                     
                     
