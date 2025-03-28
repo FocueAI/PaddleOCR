@@ -50,8 +50,24 @@ python tools/export_model.py -c configs/rec/PP-OCRv4/ch_PP-OCRv4_rec_hgnet.yml -
 
 
 
-
-
+# =============================训练并查看效果=========================================== 
+# 训练
 nohup python -u tools/train.py -c configs/det/ch_PP-OCRv4/ch_PP-OCRv4_det_teacher.yml >train-12-6.log &
-
+# 推理（使用训练模型）
 python -u tools/infer_det.py -c configs/det/ch_PP-OCRv4/ch_PP-OCRv4_det_teacher.yml
+
+###############################模型部署######################################
+# step1 训练模型 ---> 推理模型
+python tools/export_model.py -c configs/det/ch_PP-OCRv4/ch_PP-OCRv4_det_teacher.yml -o Global.checkpoints=./output/ch_PP-OCRv4-teacher-9-9/iter_epoch_500.pdparams   Global.save_inference_dir=./inference/ch_PP-OCRv4-teacher-mulcls-9-9/
+# step2 推理模型 ---> onnx
+paddle2onnx --model_dir inference/ch_PP-OCRv4-teacher-mulcls-9-9 \
+            --model_filename inference.json \
+            --params_filename inference.pdiparams \
+            --save_file hou-inference-textloc-mulcls-9-9.onnx \
+            --enable_onnx_checker True
+
+
+python3 tools/infer/predict_det.py --image_dir ./inference_results \
+                                   --det_model_dir ./weights/hou-inference-textloc-mulcls.onnx \
+                                   --use_gpu True \
+                                   --use_onnx True

@@ -366,11 +366,37 @@ def draw_e2e_res(dt_boxes, strs, img_path):
         )
     return src_im
 
+def calculate_polygon_centroid(vertices):
+    """
+    计算多边形的质心坐标。
+    :param vertices: 多边形顶点坐标列表，格式为 [(x1, y1), (x2, y2), ..., (xn, yn)]
+    :return: 质心坐标 (Cx, Cy)
+    """
+    # 分离 x 和 y 坐标
+    x_coords = [vertex[0] for vertex in vertices]
+    y_coords = [vertex[1] for vertex in vertices]
+    
+    # 计算质心
+    Cx = sum(x_coords) / len(vertices)
+    Cy = sum(y_coords) / len(vertices)
+    
+    return Cx, Cy
 
-def draw_text_det_res(dt_boxes, img):
-    for box in dt_boxes:
+def draw_text_det_res(dt_boxes, dt_boxes_cls, img):
+    for box, cls_index in zip(dt_boxes,dt_boxes_cls):
         box = np.array(box).astype(np.int32).reshape(-1, 2)
         cv2.polylines(img, [box], True, color=(255, 255, 0), thickness=2)
+        
+        font = cv2.FONT_HERSHEY_SIMPLEX  # 字体类型
+        font_scale = 1.2  # 字体大小
+        color = (0, 255, 0)  # 字体颜色（绿色）
+        thickness = 2  # 字体粗细
+        center_coord = calculate_polygon_centroid(box.tolist())
+        print(f'center_coord:{center_coord}')
+        # 在图像上添加文本
+        cv2.putText(img, str(cls_index), (int(center_coord[0]),int(center_coord[1])), font, font_scale, color, thickness, cv2.LINE_AA)
+        
+        
     return img
 
 

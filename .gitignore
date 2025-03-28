@@ -46,5 +46,7 @@ debug/
 
 
 train_data_new/det_bookspine_text/
+train_data_new1/
+*.onnx
 # !train_data_new/deal_data_det.ipynb
 
