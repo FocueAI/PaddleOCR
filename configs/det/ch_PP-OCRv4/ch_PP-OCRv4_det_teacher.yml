@@ -4,17 +4,17 @@ Global:
   epoch_num: &epoch_num 1000
   log_smooth_window: 20
   print_batch_step: 1
-  save_model_dir: ./output/ch_PP-OCRv4-teacher-12-6-1
+  save_model_dir: ./output/ch_PP-OCRv4-teacher-2025-3-28
   save_epoch_step: 10
   eval_batch_step:
   - 0
-  - 99999999 #1500
+  - 250 #1500
   cal_metric_during_train: false
   # checkpoints: /usr/projects/PaddleOCR-det-use-book-spine-data-finetuning/ch_PP-OCRv4_det_server_train/best_accuracy.pdparams  
   # checkpoints: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls/output/ch_PP-OCRv4-teacher-9-9/iter_epoch_500.pdparams  
-  checkpoints: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls/output/ch_PP-OCRv4-teacher-12-6-1/latest.pdparams
+  # checkpoints: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls/output/ch_PP-OCRv4-teacher-12-6-1/latest.pdparams
   # pretrained_model: https://paddleocr.bj.bcebos.com/pretrained/PPHGNet_small_ocr_det.pdparams
-  pretrained_model: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls/output/ch_PP-OCRv4-teacher-9-9/iter_epoch_500.pdparams  
+  # pretrained_model: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls/output/ch_PP-OCRv4-teacher-9-9/iter_epoch_500.pdparams  
   save_inference_dir: null
   use_visualdl: false
   # infer_img: doc/imgs_en/img_10.jpg
@@ -39,7 +39,7 @@ Architecture:
     k: 50
     mode: "large"
     #===========================================================》 new add ====> 多分类分别数量
-    n_cls: 8
+    n_cls: 7
     
 
 Loss:
@@ -76,9 +76,9 @@ Metric:
 Train:
   dataset:
     name: SimpleDataSet
-    data_dir: ./train_data_new/det_bookspine_text/
+    data_dir: ./train_data_new1/det_bookspine_text/
     label_file_list:
-      - ./train_data_new/det_bookspine_text/train.txt
+      - ./train_data_new1/det_bookspine_text/train.txt
     ratio_list: [1.0]
     transforms:
     - DecodeImage:
@@ -88,12 +88,11 @@ Train:
     #===========================================================》 new add ====> 多分类类别
        class2id:
        - bg
-       - series
-       - barcode
        - author
-       - publish
+       - public
        - title
        - call_no
+       - lib_name
        - other
 
 
@@ -152,28 +151,27 @@ Train:
     shuffle: true
     drop_last: false
     batch_size_per_card: 12 # 8
-    num_workers: 0
+    num_workers: 8
 
 Eval:
   dataset:
     name: SimpleDataSet
-    data_dir: ./train_data_new/det_bookspine_text/
+    data_dir: ./train_data_new1/det_bookspine_text/
     label_file_list:
-      - ./train_data_new/det_bookspine_text/val.txt
+      - ./train_data_new1/det_bookspine_text/val.txt
     transforms:
     - DecodeImage:
         img_mode: BGR
         channel_first: false
     - DetLabelEncode: # null
         class2id:
-        - bg
-        - series
-        - barcode
-        - author
-        - publish
-        - title
-        - call_no
-        - other
+          - bg
+          - author
+          - public
+          - title
+          - call_no
+          - lib_name
+          - other
     - DetResizeForTest:
         limit_side_len: 1280
         limit_type: max
@@ -195,7 +193,7 @@ Eval:
         - shape
         - polys
         - ignore_tags
-        - shrink_class
+        # - shrink_class
   loader:
     shuffle: false
     drop_last: false
