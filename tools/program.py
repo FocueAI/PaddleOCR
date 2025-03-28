@@ -576,8 +576,9 @@ def eval(
     amp_custom_white_list=[],
     amp_dtype="float16",
 ):
-    paddle.device.cuda.empty_cache()
-    paddle.set_device('cpu')  # TODO: wei
+    # paddle.device.cuda.empty_cache()    # 这2行屏蔽后，训练ips不会减速了!!!
+    # paddle.set_device('cpu')  # TODO: wei
+    
     # 
     # print(f'将模型转换到cpu上。。。。')
     # for param in model.parameters():
@@ -642,9 +643,10 @@ def eval(
                     lr_img = preds["lr_img"]
                 else:
                     # print('-------inference begin---------')
-                    preds = model(images.cpu())
+                    # preds = model(images.cpu())
+                    preds = model(images)
                     # print('-------inference end---------')
-                paddle.device.cuda.empty_cache()  # TODO: 经过测试， 有用，可以撑过一段 时间
+                # paddle.device.cuda.empty_cache()  # TODO: 经过测试， 有用，可以撑过一段 时间
             batch_numpy = []
             for item in batch:
                 if isinstance(item, paddle.Tensor):
