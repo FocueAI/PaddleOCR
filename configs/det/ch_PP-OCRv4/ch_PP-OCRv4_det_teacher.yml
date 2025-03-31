@@ -4,21 +4,23 @@ Global:
   epoch_num: &epoch_num 1000
   log_smooth_window: 20
   print_batch_step: 1
-  save_model_dir: ./output/ch_PP-OCRv4-teacher-2025-3-28
+  save_model_dir: ./output/ch_PP-OCRv4-teacher-2025-3-31
   save_epoch_step: 10
   eval_batch_step:
   - 0
-  - 250 #1500
+  - 1 #250 #1500
   cal_metric_during_train: false
   # checkpoints: /usr/projects/PaddleOCR-det-use-book-spine-data-finetuning/ch_PP-OCRv4_det_server_train/best_accuracy.pdparams  
   # checkpoints: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls/output/ch_PP-OCRv4-teacher-9-9/iter_epoch_500.pdparams  
   # checkpoints: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls/output/ch_PP-OCRv4-teacher-12-6-1/latest.pdparams
   # pretrained_model: https://paddleocr.bj.bcebos.com/pretrained/PPHGNet_small_ocr_det.pdparams
   # pretrained_model: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls/output/ch_PP-OCRv4-teacher-9-9/iter_epoch_500.pdparams  
+  pretrained_model: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls-analyse/output/ch_PP-OCRv4-teacher-2025-3-28/best_accuracy.pdparams
   save_inference_dir: null
   use_visualdl: false
   # infer_img: doc/imgs_en/img_10.jpg
-  infer_img: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls/train_data_new/det_bookspine_text/train/30020359.jpg # 30020425.jpg
+  # infer_img: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls-analyse/train_data_new1/det_bookspine_text/test_imgs/n0801005-02-01_4.jpg # 30020425.jpg
+  infer_img: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls-analyse/train_data_new1/det_bookspine_text/train/n0101001-04-01_11.jpg # 30020425.jpg
   save_res_path: ./checkpoints/det_db/predicts_db.txt
   distributed: true
   log_ranks: 0
@@ -28,6 +30,7 @@ Architecture:
   algorithm: DB
   Transform: null
   Backbone:
+    is_freeze: True
     name: PPHGNet_small
     det: True
   Neck:
@@ -101,7 +104,7 @@ Train:
         augmenter_args:
         - type: Fliplr
           args:
-            p: 0.5
+            p: 0 # 0.5
         - type: Affine
           args:
             rotate:
@@ -193,7 +196,7 @@ Eval:
         - shape
         - polys
         - ignore_tags
-        # - shrink_class
+        - classes
   loader:
     shuffle: false
     drop_last: false

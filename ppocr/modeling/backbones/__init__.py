@@ -130,5 +130,9 @@ def build_backbone(config, model_type):
             model_type, support_dict
         )
     )
+    is_freeze = config.pop("is_freeze")
     module_class = eval(module_name)(**config)
+    if is_freeze:
+        for param in module_class.parameters():
+            param.stop_gradient = True
     return module_class

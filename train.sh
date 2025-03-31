@@ -58,12 +58,12 @@ python -u tools/infer_det.py -c configs/det/ch_PP-OCRv4/ch_PP-OCRv4_det_teacher.
 
 ###############################模型部署######################################
 # step1 训练模型 ---> 推理模型
-python tools/export_model.py -c configs/det/ch_PP-OCRv4/ch_PP-OCRv4_det_teacher.yml -o Global.checkpoints=./output/ch_PP-OCRv4-teacher-9-9/iter_epoch_500.pdparams   Global.save_inference_dir=./inference/ch_PP-OCRv4-teacher-mulcls-9-9/
+python tools/export_model.py -c configs/det/ch_PP-OCRv4/ch_PP-OCRv4_det_teacher.yml -o Global.checkpoints=./output/ch_PP-OCRv4-teacher-2025-3-31/best_accuracy.pdparams   Global.save_inference_dir=./inference/ch_PP-OCRv4-teacher-2025-3-31/
 # step2 推理模型 ---> onnx
-paddle2onnx --model_dir inference/ch_PP-OCRv4-teacher-mulcls-9-9 \
+paddle2onnx --model_dir inference/ch_PP-OCRv4-teacher-2025-3-28 \
             --model_filename inference.json \
             --params_filename inference.pdiparams \
-            --save_file hou-inference-textloc-mulcls-9-9.onnx \
+            --save_file inference-textloc-mulcls-3-31.onnx \
             --enable_onnx_checker True
 
 

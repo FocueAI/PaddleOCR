@@ -39,19 +39,23 @@ class DetMetric(object):
         """
         gt_polyons_batch = batch[2]
         ignore_tags_batch = batch[3]
+        gt_cls = batch[4]  # add 2025-3-31
         for pred, gt_polyons, ignore_tags in zip(
             preds, gt_polyons_batch, ignore_tags_batch
         ):
             # prepare gt
             gt_info_list = [
-                {"points": gt_polyon, "text": "", "ignore": ignore_tag}
+                {"points": gt_polyon, "text": "", "ignore": ignore_tag, "cls": gt_cls}
                 for gt_polyon, ignore_tag in zip(gt_polyons, ignore_tags)
             ]
             # prepare det
+            # det_info_list = [
+            #     {"points": det_polyon, "text": ""} for det_polyon in pred["points"]
+            # ]
             det_info_list = [
-                {"points": det_polyon, "text": ""} for det_polyon in pred["points"]
+                {"points": det_polyon['points'], "text": "", "cls": det_polyon["classes"]} for det_polyon in pred
             ]
-            result = self.evaluator.evaluate_image(gt_info_list, det_info_list)
+            result = self.evaluator.evaluate_image(gt_info_list, det_info_list)  #TODO: 明天继续改造该函数!!!!!
             self.results.append(result)
 
     def get_metric(self):
