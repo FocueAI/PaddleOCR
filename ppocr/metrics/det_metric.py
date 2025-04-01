@@ -37,24 +37,38 @@ class DetMetric(object):
         preds: a list of dict produced by post process
              points: np.ndarray of shape (N, K, 4, 2), the polygons of objective regions.
         """
-        gt_polyons_batch = batch[2]
-        ignore_tags_batch = batch[3]
-        gt_cls = batch[4]  # add 2025-3-31
-        for pred, gt_polyons, ignore_tags in zip(
-            preds, gt_polyons_batch, ignore_tags_batch
+        gt_polyons_batch = batch[2]  # .shape=[1,7,4,2]
+        ignore_tags_batch = batch[3]  # .shape=[1,7]
+        gt_classes_batch = batch[4]  # add 2025-3-31  .shape=[1,7] 
+        for pred, gt_polyons, ignore_tags, gt_classes in zip(  # 将 batch 遍历出 一张张 图像
+            preds, gt_polyons_batch, ignore_tags_batch, gt_classes_batch
         ):
-            # prepare gt
-            gt_info_list = [
-                {"points": gt_polyon, "text": "", "ignore": ignore_tag, "cls": gt_cls}
-                for gt_polyon, ignore_tag in zip(gt_polyons, ignore_tags)
-            ]
-            # prepare det
+            # ---------------------------------- prepare gt
+            # gt_info_list = [
+            #     {"points": gt_polyon, "text": "", "ignore": ignore_tag, "cls": gt_class}
+            #     for gt_polyon, ignore_tag, gt_class in zip(gt_polyons, ignore_tags, gt_cls)
+            # ]                             #   .shape=[7,4,2], .shape=[7,]
+            gt_info_list = []   #   .shape =             [7,4,2],   [7,]         [7,]
+            for gt_polyon, ignore_tag, gt_class in zip(gt_polyons, ignore_tags, gt_classes):
+                 gt_info_list.append({"points": gt_polyon, "text": "", "ignore": ignore_tag, "cls": gt_class})
+            
+            
+            
+            
+            # ----------------------------------- prepare det
             # det_info_list = [
             #     {"points": det_polyon, "text": ""} for det_polyon in pred["points"]
             # ]
-            det_info_list = [
-                {"points": det_polyon['points'], "text": "", "cls": det_polyon["classes"]} for det_polyon in pred
-            ]
+            # det_info_list = [
+            #     {"points": det_polyon['points'], "text": "", "cls": det_polyon["classes"]} for det_polyon in pred
+            # ]
+            det_info_list = []
+            for index, det_poly in enumerate(pred["points"]):
+                det_info_list.append({"points": det_poly, "text": "", "score": pred["scores"][index], "cls": pred["classes"][index]})
+            
+            
+            
+            
             result = self.evaluator.evaluate_image(gt_info_list, det_info_list)  #TODO: 明天继续改造该函数!!!!!
             self.results.append(result)
 

@@ -87,11 +87,12 @@ class DetectionIoUEvaluator(object):
         for n in range(len(gt)):
             points = gt[n]["points"]
             dontCare = gt[n]["ignore"]
+            box_classes = gt[n]["cls"]
             if not Polygon(points).is_valid:
                 continue
 
             gtPol = points
-            gtPols.append(gtPol)
+            gtPols.append((gtPol,box_classes))
             gtPolPoints.append(points)
             if dontCare:
                 gtDontCarePolsNum.append(len(gtPols) - 1)
@@ -108,15 +109,16 @@ class DetectionIoUEvaluator(object):
 
         for n in range(len(pred)):
             points = pred[n]["points"]
+            box_classes = pred[n]["cls"]
             if not Polygon(points).is_valid:
                 continue
 
             detPol = points
-            detPols.append(detPol)
+            detPols.append((detPol,box_classes))
             detPolPoints.append(points)
             if len(gtDontCarePolsNum) > 0:
                 for dontCarePol in gtDontCarePolsNum:
-                    dontCarePol = gtPols[dontCarePol]
+                    dontCarePol, _ = gtPols[dontCarePol]
                     intersected_area = get_intersection(dontCarePol, detPol)
                     pdDimensions = Polygon(detPol).area
                     precision = (
@@ -144,9 +146,14 @@ class DetectionIoUEvaluator(object):
             detRectMat = np.zeros(len(detPols), np.int8)
             for gtNum in range(len(gtPols)):
                 for detNum in range(len(detPols)):
-                    pG = gtPols[gtNum]
-                    pD = detPols[detNum]
+                    pG,point_G_class = gtPols[gtNum]
+                    pD,point_D_class = detPols[detNum]
                     iouMat[gtNum, detNum] = get_intersection_over_union(pD, pG)
+                    # if point_G_class == point_D_class:
+                    #     iouMat[gtNum, detNum] = get_intersection_over_union(pD, pG)
+                    # else:
+                    #     iouMat[gtNum, detNum] = 0
+            
 
             for gtNum in range(len(gtPols)):
                 for detNum in range(len(detPols)):
