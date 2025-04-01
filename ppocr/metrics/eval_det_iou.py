@@ -148,11 +148,11 @@ class DetectionIoUEvaluator(object):
                 for detNum in range(len(detPols)):
                     pG,point_G_class = gtPols[gtNum]
                     pD,point_D_class = detPols[detNum]
-                    iouMat[gtNum, detNum] = get_intersection_over_union(pD, pG)
-                    # if point_G_class == point_D_class:
-                    #     iouMat[gtNum, detNum] = get_intersection_over_union(pD, pG)
-                    # else:
-                    #     iouMat[gtNum, detNum] = 0
+                    # iouMat[gtNum, detNum] = get_intersection_over_union(pD, pG)
+                    if point_G_class == point_D_class:
+                        iouMat[gtNum, detNum] = get_intersection_over_union(pD, pG)
+                    else:
+                        iouMat[gtNum, detNum] = 0
             
 
             for gtNum in range(len(gtPols)):
