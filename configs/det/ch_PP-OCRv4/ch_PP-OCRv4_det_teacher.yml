@@ -8,14 +8,14 @@ Global:
   save_epoch_step: 10
   eval_batch_step:
   - 0
-  - 1 #250 #1500
+  - 207 #250 #1500
   cal_metric_during_train: false
   # checkpoints: /usr/projects/PaddleOCR-det-use-book-spine-data-finetuning/ch_PP-OCRv4_det_server_train/best_accuracy.pdparams  
   # checkpoints: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls/output/ch_PP-OCRv4-teacher-9-9/iter_epoch_500.pdparams  
   # checkpoints: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls/output/ch_PP-OCRv4-teacher-12-6-1/latest.pdparams
   # pretrained_model: https://paddleocr.bj.bcebos.com/pretrained/PPHGNet_small_ocr_det.pdparams
   # pretrained_model: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls/output/ch_PP-OCRv4-teacher-9-9/iter_epoch_500.pdparams  
-  pretrained_model: /mnt/disk4/projects/expore/PaddleOCR-det-mulcls-analyse/output/ch_PP-OCRv4-teacher-2025-3-28/best_accuracy.pdparams
+  pretrained_model: #/mnt/disk4/projects/expore/PaddleOCR-det-mulcls-analyse/output/ch_PP-OCRv4-teacher-2025-3-28/best_accuracy.pdparams
   save_inference_dir: null
   use_visualdl: false
   # infer_img: doc/imgs_en/img_10.jpg
@@ -59,7 +59,7 @@ Optimizer:
   beta2: 0.999
   lr:
     name: Cosine
-    learning_rate: 0.0005 #(8*8c)
+    learning_rate: 0.001 #(8*8c)
     warmup_epoch: 2
   regularizer:
     name: L2
@@ -154,7 +154,7 @@ Train:
     shuffle: true
     drop_last: false
     batch_size_per_card: 12 # 8
-    num_workers: 8
+    num_workers: 0
 
 Eval:
   dataset:

@@ -75,22 +75,52 @@ class Head(nn.Layer):
             bias_attr=get_bias_attr(in_channels // 4),
         )
         self.con_mul_cls = nn.Conv2DTranspose(
-            in_channels=in_channels // 4,
+            # in_channels=in_channels // 4,
+            in_channels=in_channels // 2,
             out_channels= self.mulcls if self.mulcls is not None else 1,
             kernel_size=kernel_list[2],
             stride=2,
             weight_attr=ParamAttr(initializer=paddle.nn.initializer.KaimingUniform()),
             bias_attr=get_bias_attr(in_channels // 4),
         )
+        ###############################################  为强壮分类分支做的代码修改
+        self.extra_conv = nn.Conv2D(
+            in_channels=in_channels // 4,
+            out_channels=in_channels // 2,
+            kernel_size=3,
+            padding=1,
+            weight_attr=ParamAttr(initializer=paddle.nn.initializer.KaimingUniform()),
+            bias_attr=get_bias_attr(in_channels // 4)
+        )
+        self.extra_bn = nn.BatchNorm(
+            num_channels=in_channels // 2,
+            param_attr=ParamAttr(initializer=paddle.nn.initializer.Constant(value=1.0)),
+            bias_attr=ParamAttr(initializer=paddle.nn.initializer.Constant(value=1e-4)),
+            act="relu"
+        )
+        self.dropout = nn.Dropout(p=0.5)
+        #######################################################
 
-    def forward(self, x, return_f=False, only_return_mulcls=False):
-        x = self.conv1(x)
-        x = self.conv_bn1(x)
-        x = self.conv2(x)
-        x = self.conv_bn2(x)
+    def forward(self, x, return_f=False, only_return_mulcls=False):  # x.shape = [1, 256, 24, 320]
+        x = self.conv1(x)     # [1, 64, 24, 320]   通道数下降 4 倍
+        x = self.conv_bn1(x)  # [1, 64, 24, 320]    
+        x = self.conv2(x)     # [1, 64, 48, 640]    特征图变为原来的 2 倍
+        x = self.conv_bn2(x)  # [1, 64, 48, 640]
         if return_f is True:
             f = x
-        if only_return_mulcls and self.mulcls is not None:
+        if only_return_mulcls and self.mulcls is not None:   # x.shape = [1, 64, 48, 640] 
+            # TODO: 准备在这里增加神经元的数量，提高分类的效果！！！！
+            # 在这里增加额外的卷积层和激活函数
+            x = self.extra_conv(x)  # 增加额外的卷积层   x.shape = [1, 128, 48, 640]
+            x = self.extra_bn(x)    # 批量归一化 
+            x = self.dropout(x)     # 添加 Dropout  x = [1, 128, 48, 640]
+             # 最终的分类卷积层
+            
+            
+            
+            
+            
+            
             return  self.con_mul_cls(x)
         x = self.conv3(x)
         # if self.mulcls is not None:
